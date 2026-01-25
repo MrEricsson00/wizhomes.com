@@ -607,32 +607,31 @@ const Admin: React.FC<AdminProps> = ({ theme, toggleTheme, onLogout }) => {
                       <td className="px-12 py-10">
                         <div className="flex items-center space-x-3">
                           {activeTab === 'rooms' && (
-                            <button 
-                              onClick={() => setStatusToEdit(item)}
-                              className={`px-5 py-2.5 border-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-sm ${getStatusColor(item.status)}`}
-                            >
-                              {item.status}
-                            </button>
+                            <>
+                              <button
+                                onClick={() => setViewingRoom(item)}
+                                className="px-6 py-2.5 bg-zinc-950 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:bg-zinc-800 active:scale-95 shadow-sm"
+                              >
+                                View Details
+                              </button>
+                              <button
+                                onClick={() => setStatusToEdit(item)}
+                                className={`px-5 py-2.5 border-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-sm ${getStatusColor(item.status)}`}
+                              >
+                                {item.status}
+                              </button>
+                            </>
                           )}
                           <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0">
-                            {activeTab === 'rooms' && (
-                              <button 
-                                onClick={() => setViewingRoom(item)} 
-                                className="p-3 bg-white dark:bg-zinc-800 rounded-xl text-zinc-950 dark:text-white hover:bg-zinc-950 hover:text-white dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700 shadow-sm"
-                                title="Inspect Unit"
-                              >
-                                <Icons.View />
-                              </button>
-                            )}
-                            <button 
-                              onClick={() => activeTab === 'rooms' ? setIsEditing(item) : notify('Booking editing limited in preview...')} 
+                            <button
+                              onClick={() => activeTab === 'rooms' ? setIsEditing(item) : notify('Booking editing limited in preview...')}
                               className="p-3 bg-white dark:bg-zinc-800 rounded-xl text-zinc-950 dark:text-white hover:bg-zinc-950 hover:text-white dark:hover:bg-red-600 transition-all border border-zinc-200 dark:border-zinc-700 shadow-sm"
                               title="Refine Asset"
                             >
                               <Icons.Edit />
                             </button>
-                            <button 
-                              onClick={() => activeTab === 'rooms' ? deleteRoom(item.id) : deleteBooking(item.id)} 
+                            <button
+                              onClick={() => activeTab === 'rooms' ? deleteRoom(item.id) : deleteBooking(item.id)}
                               className="p-3 bg-red-600/10 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all border border-red-600/20 shadow-sm"
                               title="Destroy Entry"
                             >
