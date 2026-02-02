@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { MemoryRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Icons, Logo } from './constants';
 import Home from './pages/Home';
 import Rooms from './pages/Rooms';
@@ -8,15 +8,21 @@ import RoomDetail from './pages/RoomDetail';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 const Navbar: React.FC<{ theme: string; toggleTheme: () => void; isAuthenticated: boolean }> = ({ theme, toggleTheme, isAuthenticated }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith('/admin') || location.pathname === '/login';
 
   if (isAdmin) return null;
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  
+  const handleLogoDoubleClick = () => {
+    navigate('/login');
+  };
 
   return (
     <>
@@ -24,8 +30,8 @@ const Navbar: React.FC<{ theme: string; toggleTheme: () => void; isAuthenticated
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-24">
             <div className="flex items-center">
-              <Link to="/" className="group py-2">
-                <Logo className="h-10 md:h-12 scale-90 md:scale-100 transform transition-transform group-hover:scale-105 duration-300" />
+              <Link to="/" className="group py-2" onDoubleClick={handleLogoDoubleClick}>
+                <Logo className="h-10 md:h-12 scale-90 md:scale-100 transform transition-transform group-hover:scale-105 duration-300 cursor-pointer" />
               </Link>
             </div>
             
@@ -47,9 +53,6 @@ const Navbar: React.FC<{ theme: string; toggleTheme: () => void; isAuthenticated
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
                 )}
               </button>
-              <Link to={isAuthenticated ? "/admin" : "/login"} className="p-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors">
-                <Icons.User />
-              </Link>
               <button onClick={toggleMenu} className="md:hidden p-2 text-zinc-950 dark:text-white">
                 <Icons.Menu />
               </button>
@@ -158,20 +161,24 @@ const App: React.FC = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const handleLogin = () => setIsAuthenticated(true);
-  const handleLogout = () => setIsAuthenticated(false);
+  const handleLogin = (userData?: { email: string; name: string }) => setIsAuthenticated(true);
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('wiz_currentUser');
+  };
 
   return (
-    <MemoryRouter>
+    <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950 transition-colors duration-300">
         <Navbar theme={theme} toggleTheme={toggleTheme} isAuthenticated={isAuthenticated} />
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/rooms" element={<Rooms />} />
-            <Route path="/rooms/:id" element={<RoomDetail />} />
+            <Route path="/rooms/:id" element={<RoomDetail isAuthenticated={isAuthenticated} />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            <Route path="/signup" element={<Signup onSignup={handleLogin} />} />
             <Route 
               path="/admin/*" 
               element={isAuthenticated ? <Admin theme={theme} toggleTheme={toggleTheme} onLogout={handleLogout} /> : <Navigate to="/login" replace />} 
@@ -180,7 +187,7 @@ const App: React.FC = () => {
         </main>
         <Footer />
       </div>
-    </MemoryRouter>
+    </BrowserRouter>
   );
 };
 

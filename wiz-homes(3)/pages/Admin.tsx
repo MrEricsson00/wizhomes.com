@@ -87,6 +87,51 @@ const Admin: React.FC<AdminProps> = ({ theme, toggleTheme, onLogout }) => {
     notify(`Status updated to ${newStatus}`);
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !isEditing) return;
+    
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64String = event.target?.result as string;
+        const gallery = isEditing.gallery || [];
+        if (!gallery.includes(base64String)) {
+          setIsEditing({
+            ...isEditing,
+            gallery: [...gallery, base64String]
+          });
+          notify('Image uploaded successfully');
+        } else {
+          notify('Image already in gallery');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Reset input
+    e.target.value = '';
+  };
+
+  const handlePrimaryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !isEditing) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64String = event.target?.result as string;
+      setIsEditing({
+        ...isEditing,
+        imageUrl: base64String
+      });
+      notify('Primary image uploaded successfully');
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset input
+    e.target.value = '';
+  };
+
   const addImageToGallery = () => {
     if (!isEditing || !newImageUrl.trim()) return;
     const gallery = isEditing.gallery || [];
@@ -326,17 +371,25 @@ const Admin: React.FC<AdminProps> = ({ theme, toggleTheme, onLogout }) => {
                   
                   <div className="space-y-4">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Primary Identity Visual (Main)</label>
-                    <div className="flex space-x-4">
-                      <input 
-                        type="url" 
-                        required
-                        value={isEditing.imageUrl}
-                        onChange={(e) => setIsEditing({...isEditing, imageUrl: e.target.value})}
-                        className="flex-grow px-7 py-4 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl focus:outline-none focus:border-red-600 transition-all dark:text-white text-xs"
-                        placeholder="Hero image URL"
-                      />
-                      <div className="w-20 h-16 rounded-2xl overflow-hidden border-2 border-zinc-200 dark:border-zinc-700 flex-shrink-0 shadow-lg">
-                         <img src={isEditing.imageUrl} className="w-full h-full object-cover" alt="Primary Preview" />
+                    <div className="space-y-4">
+                      <div className="bg-white dark:bg-zinc-900 border-2 border-dashed border-red-600/30 rounded-2xl p-8 text-center cursor-pointer hover:bg-red-600/5 transition-all">
+                        <input 
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePrimaryImageUpload}
+                          className="hidden"
+                          id="primaryImageUpload"
+                        />
+                        <label htmlFor="primaryImageUpload" className="cursor-pointer flex flex-col items-center">
+                          <div className="w-12 h-12 bg-red-600/10 rounded-full flex items-center justify-center mb-4 text-red-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          </div>
+                          <p className="font-black uppercase tracking-widest text-[10px] text-zinc-700 dark:text-zinc-300 mb-1">Upload Main Image</p>
+                          <p className="text-[8px] text-zinc-500 dark:text-zinc-400">Click to select or drag and drop (JPG, PNG, etc.)</p>
+                        </label>
+                      </div>
+                      <div className="w-full h-24 rounded-2xl overflow-hidden border-2 border-zinc-200 dark:border-zinc-700 shadow-lg bg-zinc-100 dark:bg-zinc-800">
+                        <img src={isEditing.imageUrl} className="w-full h-full object-cover" alt="Primary Preview" onError={(e) => {e.currentTarget.style.display = 'none'}} />
                       </div>
                     </div>
                   </div>
@@ -369,21 +422,24 @@ const Admin: React.FC<AdminProps> = ({ theme, toggleTheme, onLogout }) => {
                       </div>
                     </div>
 
-                    <div className="flex space-x-3 mt-8">
-                      <input 
-                        type="url"
-                        value={newImageUrl}
-                        onChange={(e) => setNewImageUrl(e.target.value)}
-                        className="flex-grow px-7 py-5 bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-700 rounded-2xl focus:outline-none focus:border-red-600 transition-all dark:text-white text-xs"
-                        placeholder="Paste additional image URL here..."
-                      />
-                      <button 
-                        type="button"
-                        onClick={addImageToGallery}
-                        className="px-10 py-5 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-95 shadow-xl"
-                      >
-                        Commit URL
-                      </button>
+                    <div className="space-y-4 mt-8">
+                      <div className="bg-white dark:bg-zinc-900 border-2 border-dashed border-red-600/30 rounded-2xl p-8 text-center cursor-pointer hover:bg-red-600/5 transition-all">
+                        <input 
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          id="imageUpload"
+                        />
+                        <label htmlFor="imageUpload" className="cursor-pointer flex flex-col items-center">
+                          <div className="w-12 h-12 bg-red-600/10 rounded-full flex items-center justify-center mb-4 text-red-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          </div>
+                          <p className="font-black uppercase tracking-widest text-[10px] text-zinc-700 dark:text-zinc-300 mb-1">Upload Images</p>
+                          <p className="text-[8px] text-zinc-500 dark:text-zinc-400">Click to select or drag and drop (JPG, PNG, etc.)</p>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>

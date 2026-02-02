@@ -1,8 +1,10 @@
 {
+  "buildCommand": "cd wiz-homes(3) && npm run build",
+  "outputDirectory": "wiz-homes(3)/dist",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/wiz-homes(3)/index.html"
+      "destination": "/wiz-homes(3)/dist/index.html"
     }
   ]
 }

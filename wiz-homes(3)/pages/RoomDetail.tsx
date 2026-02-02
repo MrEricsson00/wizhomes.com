@@ -3,7 +3,11 @@ import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getRooms, Icons } from '../constants';
 
-const RoomDetail: React.FC = () => {
+interface RoomDetailProps {
+  isAuthenticated?: boolean;
+}
+
+const RoomDetail: React.FC<RoomDetailProps> = ({ isAuthenticated = false }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
@@ -65,11 +69,18 @@ const RoomDetail: React.FC = () => {
   const total = subtotal + serviceFee + cleaningFee;
 
   const handleReserve = () => {
+    if (!isAuthenticated) {
+      showNotification('Please sign in to make a booking', 'info');
+      setTimeout(() => navigate('/login'), 1500);
+      return;
+    }
+
     setIsBooking(true);
     setTimeout(() => {
+      const currentUser = JSON.parse(localStorage.getItem('wiz_currentUser') || '{}');
       const newBooking = {
         id: `B${Math.floor(Math.random() * 10000)}`,
-        guestName: "Guest User",
+        guestName: currentUser.name || "Guest User",
         roomName: room.name,
         checkIn,
         checkOut,
@@ -190,9 +201,15 @@ const RoomDetail: React.FC = () => {
                 <div className="p-3"><label className="text-[10px] font-black uppercase text-zinc-900 dark:text-zinc-100 block">Guests</label><select value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="text-sm bg-transparent border-none p-0 focus:ring-0 dark:text-zinc-400 w-full"><option value={1} className="dark:bg-zinc-900">1 guest</option><option value={2} className="dark:bg-zinc-900">2 guests</option></select></div>
               </div>
 
-              <button onClick={handleReserve} disabled={isBooking} className={`w-full py-4 bg-red-600 text-white font-black rounded-xl transition-all shadow-xl shadow-red-600/30 flex items-center justify-center ${isBooking ? 'opacity-70' : ''}`}>
-                {isBooking ? 'Processing...' : 'Reserve Now'}
+              <button onClick={handleReserve} disabled={isBooking} className={`w-full py-4 bg-red-600 text-white font-black rounded-xl transition-all shadow-xl shadow-red-600/30 flex items-center justify-center ${isBooking || !isAuthenticated ? 'opacity-90' : ''}`}>
+                {isBooking ? 'Processing...' : !isAuthenticated ? 'Sign In to Reserve' : 'Reserve Now'}
               </button>
+
+              {!isAuthenticated && (
+                <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-3">
+                  <Link to="/login" className="text-red-600 font-bold hover:underline">Create an account</Link> or <Link to="/login" className="text-red-600 font-bold hover:underline">sign in</Link> to book
+                </p>
+              )}
 
               <div className="space-y-4 text-zinc-600 dark:text-zinc-400 mt-6">
                 <div className="flex justify-between"><span className="underline">${room.price} x {nights} nights</span><span>${subtotal}</span></div>

@@ -1,23 +1,63 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Logo } from '../constants';
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: (userData?: { email: string; name: string; isAdmin?: boolean }) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    if (!email || !password) {
+      setError('Please enter email and password');
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate API delay
     setTimeout(() => {
-      onLogin();
-      navigate('/admin');
+      // Check if it's admin login
+      if (email === 'admin@wizhomes.com' && password === 'password') {
+        onLogin({
+          email: email,
+          name: 'Admin',
+          isAdmin: true
+        });
+        navigate('/admin');
+        setIsLoading(false);
+        return;
+      }
+
+      // Regular user login
+      const users = JSON.parse(localStorage.getItem('wiz_users') || '[]');
+      const user = users.find((u: any) => u.email === email && u.password === password);
+
+      if (user) {
+        localStorage.setItem('wiz_currentUser', JSON.stringify({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          isAdmin: false
+        }));
+        onLogin({
+          email: user.email,
+          name: user.name,
+          isAdmin: false
+        });
+        navigate('/rooms');
+      } else {
+        setError('Invalid email or password');
+      }
+      setIsLoading(false);
     }, 1000);
   };
 
@@ -29,20 +69,27 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <div className="text-center mb-10">
               <Logo className="h-20 mb-8" />
               <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">
-                Authorized Operator Access Required.
+                Sign in to your WIZ HOMES account
               </p>
             </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-600/10 border border-red-600/30 rounded-xl text-red-600 text-sm font-bold">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-500 ml-1">
                   Email Address
                 </label>
-                <input 
-                  type="email" 
-                  defaultValue="admin@wizhomes.com"
-                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-600/20 dark:text-white transition-all font-bold" 
-                  placeholder="admin@wizhomes.com"
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-600/20 dark:text-white transition-all font-bold"
+                  placeholder="your@email.com"
                 />
               </div>
 
@@ -52,26 +99,27 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     Password
                   </label>
                   <button type="button" className="text-[10px] font-bold text-red-600 hover:underline">
-                    Forgot Key?
+                    Forgot Password?
                   </button>
                 </div>
-                <input 
-                  type="password" 
-                  defaultValue="password"
-                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-600/20 dark:text-white transition-all font-bold" 
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-600/20 dark:text-white transition-all font-bold"
                   placeholder="••••••••"
                 />
               </div>
 
               <div className="flex items-center space-x-2 ml-1">
-                <input type="checkbox" id="remember" className="accent-red-600 w-4 h-4 rounded" defaultChecked />
+                <input type="checkbox" id="remember" className="accent-red-600 w-4 h-4 rounded" />
                 <label htmlFor="remember" className="text-xs font-bold text-zinc-500 dark:text-zinc-400 select-none">
-                  Keep Session Secure
+                  Keep me signed in
                 </label>
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={isLoading}
                 className="w-full py-5 bg-red-600 text-white font-black rounded-2xl hover:bg-red-700 transition-all shadow-xl shadow-red-600/20 flex items-center justify-center space-x-2 active:scale-95 uppercase tracking-widest text-[11px]"
               >
@@ -81,19 +129,28 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Authenticating...</span>
+                    <span>Signing in...</span>
                   </span>
                 ) : (
-                  <span>Initiate Secure Sign In</span>
+                  <span>Sign In</span>
                 )}
               </button>
             </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-zinc-600 dark:text-zinc-400 text-sm font-medium">
+                Don't have an account?{' '}
+                <Link to="/signup" className="text-red-600 font-black hover:underline">
+                  Create one now
+                </Link>
+              </p>
+            </div>
           </div>
-          
+
           <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 text-center border-t border-zinc-100 dark:border-zinc-800">
-             <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
-               © 2024 WIZ HOMES EXTERIORS SECURITY PROTOCOL
-             </p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400">
+              © 2024 WIZ HOMES EXTERIORS
+            </p>
           </div>
         </div>
       </div>
