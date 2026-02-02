@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/wiz-homes(3)/index.html"
+    }
+  ]
+}
